@@ -11,7 +11,7 @@ const Booking = sequelize.define('Booking', {
     type: DataTypes.UUID,
     allowNull: false,
     references: {
-      model: 'users',
+      model: 'user',
       key: 'id'
     }
   },
@@ -31,8 +31,20 @@ const Booking = sequelize.define('Booking', {
       key: 'id'
     },
   },
+  service_id: {
+    type: DataTypes.UUID,
+    allowNull: true,
+    references: {
+      model: 'services',
+      key: 'id'
+    }
+  },
+  price_snapshot: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true
+  },
   status: {
-    type: DataTypes.ENUM('pending', 'confirmed', 'completed', 'cancelled'),
+    type: DataTypes.ENUM('pending', 'confirmed', 'in_progress', 'completed', 'cancelled'),
     defaultValue: 'pending',
     allowNull: false
   },

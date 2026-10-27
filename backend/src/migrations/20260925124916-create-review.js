@@ -42,7 +42,11 @@ module.exports = {
       },
       rating: {
         type: Sequelize.FLOAT,
-        allowNull: false
+        allowNull: false,
+        validate: {
+          min: 1,
+          max: 5
+        }
       },
       comment: {
         type: Sequelize.STRING,

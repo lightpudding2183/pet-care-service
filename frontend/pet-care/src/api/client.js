@@ -19,13 +19,16 @@ client.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err.response?.status;
+    const responseData = err.response?.data;
     // Only force logout if we had a session; a failed login also returns 401
     if (status === 401 && authToken && unauthorizedHandler) unauthorizedHandler();
 
     return Promise.reject({
       status: status ?? null,
-      message: err.response?.data?.message || (err.request ? 'Cannot reach the server. Check your connection.' : 'Something went wrong'),
-      fieldErrors: err.response?.data?.errors || null, // e.g. { email: 'Already in use' }
+      message: responseData?.message 
+        || [responseData?.error, ...(responseData?.details || [])].filter(Boolean).join(' ') 
+        || (err.response ? `Request failed (${status})` : err.request ? 'Cannot reach the server. Check your connection.' : 'Something went wrong'),
+      fieldErrors: responseData?.errors || null, // e.g. { email: 'Already in use' }
     });
   }
 );

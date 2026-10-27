@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { getProviderById, createProvider, updateProvider } = require('../controllers/provider.controller');
+const { getProviderById, createProvider, updateProvider, searchProviders } = require('../controllers/provider.controller');
 const { getAvailability, updateAvailability, deleteAvailability } = require('../controllers/availability.controller');
 const requireAuth = require('../middlewares/auth.middleware');
 const validateBody = require('../middlewares/validate');
@@ -11,6 +11,7 @@ const {
   availabilitySchema
 } = require('../validators/provider.validator');
 
+router.get('/search', requireAuth, searchProviders);
 router.get('/:id', requireAuth, getProviderById);
 router.post('/', requireAuth, validateBody(createProviderSchema), createProvider);
 router.put('/:id', requireAuth, validateBody(updateProviderSchema), updateProvider);

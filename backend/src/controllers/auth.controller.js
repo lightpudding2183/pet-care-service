@@ -1,40 +1,20 @@
 const authService = require('../services/auth.service');
-const AppError = require('../utils/error');
+const asyncHandler = require('../utils/asyncHandler');
 
-async function register(req, res) {
-  try {
-    const result = await authService.register(req.body);
-    res.status(201).json(result);
-  } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-}
+const register = asyncHandler(async (req, res) => {
+  const result = await authService.register(req.body);
+  res.status(201).json(result);
+});
 
-async function login(req, res) {
-  try {
-    const { email, password } = req.body;
-    const result = await authService.login(email, password);
-    res.status(200).json(result);
-  } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-}
+const login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  const result = await authService.login(email, password);
+  res.status(200).json(result);
+});
 
-async function logout(req, res) {
-  try {
-    await authService.logout(req.user);
-    res.status(200).json({ message: 'Logged out successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
-  }
-}
+const logout = asyncHandler(async (req, res) => {
+  await authService.logout(req.user);
+  res.status(200).json({ message: 'Logged out successfully' });
+});
 
 module.exports = { register, login, logout };

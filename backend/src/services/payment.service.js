@@ -1,12 +1,17 @@
 const { Op } = require('sequelize');
-const { Payment, Booking, Pet, ProviderServices, sequelize } = require('../index');
+const { Payment, Booking, Pet, Provider, ProviderServices, sequelize } = require('../index');
 const AppError = require('../utils/error');
 
 class PaymentService {
   async resolveAmount(booking, serviceId) {
+    if (booking.price_snapshot !== null && booking.price_snapshot !== undefined) {
+      return booking.price_snapshot;
+    }
+
     const where = { provider_id: booking.provider_id };
-    if (serviceId) {
-      where.service_id = serviceId;
+    const selectedServiceId = serviceId || booking.service_id;
+    if (selectedServiceId) {
+      where.service_id = selectedServiceId;
     }
 
     const services = await ProviderServices.findAll({ where });
@@ -91,22 +96,47 @@ class PaymentService {
         throw new AppError('Invalid payment status', 400);
       }
 
-      const payment = await this.getPaymentById(paymentId);
-      payment.status = status;
-      if (payment_provider_ref !== undefined) {
-        payment.payment_provider_ref = payment_provider_ref;
-      }
-      await payment.save();
-
-      if (status === 'paid') {
-        const booking = await Booking.findByPk(payment.booking_id);
-        if (booking && booking.status === 'pending') {
-          booking.status = 'confirmed';
-          await booking.save();
+      return await sequelize.transaction(async (transaction) => {
+        const payment = await Payment.findByPk(paymentId, {
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+        if (!payment) {
+          throw new AppError('Payment not found', 404);
         }
-      }
 
-      return payment;
+        const wasPaid = payment.status === 'paid';
+        payment.status = status;
+        if (payment_provider_ref !== undefined) {
+          payment.payment_provider_ref = payment_provider_ref;
+        }
+        await payment.save({ transaction });
+
+        if (status === 'paid') {
+          const booking = await Booking.findByPk(payment.booking_id, { transaction });
+          if (booking) {
+            if (booking.status === 'pending') {
+              booking.status = 'confirmed';
+              await booking.save({ transaction });
+            }
+
+            if (!wasPaid) {
+              const provider = await Provider.findByPk(booking.provider_id, { transaction });
+              const notifService = require('./notif.service');
+              const recipients = new Set([booking.user_id, provider?.user_id].filter(Boolean));
+              for (const user_id of recipients) {
+                await notifService.createNotif({
+                  user_id,
+                  type: 'payment.paid',
+                  payload_json: { payment_id: payment.id, booking_id: booking.id }
+                }, { transaction });
+              }
+            }
+          }
+        }
+
+        return payment;
+      });
     } catch (error) {
       if (error instanceof AppError) {
         throw error;

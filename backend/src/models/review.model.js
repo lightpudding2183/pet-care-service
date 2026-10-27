@@ -10,6 +10,7 @@ const Review = sequelize.define('Review', {
   booking_id: {
     type: DataTypes.UUID,
     allowNull: false,
+    unique: 'review_booking_id_unique',
     references: {
       model: 'booking',
       key: 'id'
@@ -33,7 +34,11 @@ const Review = sequelize.define('Review', {
   },
   rating: {
     type: DataTypes.FLOAT,
-    allowNull: false
+    allowNull: false,
+    validate: {
+      min: 1,
+      max: 5
+    }
   },
   comment: {
     type: DataTypes.STRING,

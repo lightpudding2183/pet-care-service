@@ -1,36 +1,30 @@
 const userService = require('../services/user.service');
-const AppError = require('../utils/error');
+const avatarService = require('../services/avatar.service');
+const asyncHandler = require('../utils/asyncHandler');
 
-async function getProfile(req, res) {
-  try {
-    const userId = req.user.id;
-    const userProfile = await userService.getProfile(userId);
-    res.status(200).json(userProfile);
-  } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ error: error.message });
-    } else {
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-}
+const getProfile = asyncHandler(async (req, res) => {
+  const userProfile = await userService.getProfile(req.user.id);
+  res.status(200).json(userProfile);
+});
 
-async function updateProfile(req, res) {
-  try {
-    const userId = req.user.id;
-    const updatedData = req.body;
-    await userService.updateProfile(userId, updatedData);
-    res.status(200).json({ message: 'Profile updated successfully' });
-  } catch (error) {
-    if (error instanceof AppError) {
-      res.status(error.statusCode).json({ error: error.message });
-    } else {
-    res.status(500).json({ error: 'Internal server error' });
-    }
-  }
-}
+const updateProfile = asyncHandler(async (req, res) => {
+  const profile = await userService.updateProfile(req.user.id, req.body);
+  res.status(200).json(profile);
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  const result = await userService.changePassword(req.user.id, req.body);
+  res.status(200).json(result);
+});
+
+const createAvatarUploadUrl = asyncHandler(async (req, res) => {
+  const result = await avatarService.createUploadUrl(req.user.id, req.body.contentType);
+  res.status(200).json(result);
+});
 
 module.exports = {
   getProfile,
-  updateProfile
+  updateProfile,
+  changePassword,
+  createAvatarUploadUrl
 };

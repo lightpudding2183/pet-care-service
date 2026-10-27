@@ -20,7 +20,7 @@ const Notification = sequelize.define('Notification', {
     allowNull: false
   },
   payload_json: {
-    type: DataTypes.STRING,
+    type: DataTypes.TEXT,
     allowNull: false
   },
   read: {

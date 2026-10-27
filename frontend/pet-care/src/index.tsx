@@ -7,7 +7,7 @@ import { AuthProvider } from "./context/AuthContext";
 import RootNavigator from "./navigations/RootNavigator";
 import { registerRootComponent } from "expo";
 import { STRIPE_PUBLISHABLE_KEY } from "./config";
-import { StripeProvider } from '@stripe/stripe-react-native';
+import StripeProvider from './components/StripeProvider';
 
 
 export default function Index() {

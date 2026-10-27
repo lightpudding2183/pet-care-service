@@ -12,7 +12,7 @@ const {
 const requireAuth = require('../middlewares/auth.middleware');
 
 router.post('/', requireAuth, createBooking);
-router.get('/users/:userId/bookings', requireAuth, getBookingsByUserId);
+router.get('/', requireAuth, getBookingsByUserId);
 router.get('/providers/:providerId/bookings', requireAuth, getBookingsByProviderId);
 router.get('/:id', requireAuth, getBookingDetails);
 router.put('/:id', requireAuth, updateBooking);

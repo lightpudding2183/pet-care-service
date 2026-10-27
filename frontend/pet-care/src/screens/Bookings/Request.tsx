@@ -25,11 +25,13 @@ const defaultRange = () => {
 export default function BookingRequestScreen({ route, navigation }: { route: { params: { provider: any } }; navigation: any }) {
   const { provider } = route.params;
   const providerName = provider.businessName || provider.user?.fullName || 'this provider';
+  const providerServices = provider.provider_services ?? provider.providerServices ?? [];
 
   const { pets, loading: petsLoading, error: petsError, fetchPets } = usePets();
   useFocusEffect(useCallback(() => { fetchPets(); }, [fetchPets])); // picks up a pet added mid-flow
 
   const [petId, setPetId] = useState<string | undefined>(undefined);
+  const [serviceId, setServiceId] = useState<string | undefined>(undefined);
   const [{ start, end }, setRange] = useState(defaultRange);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
@@ -44,7 +46,7 @@ export default function BookingRequestScreen({ route, navigation }: { route: { p
   const onEndChange = (next: Date) => setRange((r) => ({ ...r, end: next }));
 
   const onSubmit = async () => {
-    const found = validateBooking({ petId, start: start.toISOString(), end: end.toISOString() });
+    const found = validateBooking({ petId, serviceId, start: start.toISOString(), end: end.toISOString() });
     setFormError('');
     if (Object.keys(found).length) return setErrors(found);
 
@@ -55,6 +57,7 @@ export default function BookingRequestScreen({ route, navigation }: { route: { p
       const booking = await createBookingRequest({
         providerId: provider.id,
         petId,
+        serviceId,
         scheduledStart: start.toISOString(),
         scheduledEnd: end.toISOString(),
       });
@@ -91,6 +94,15 @@ export default function BookingRequestScreen({ route, navigation }: { route: { p
 
         <ChipGroup label="Which pet?" options={pets.map((p) => ({ value: String(p.id), label: String(p.name) }))}
           value={petId ?? ''} onChange={setPetId} error={errors.petId} clearable />
+
+        <ChipGroup label="Which service?" options={providerServices.map((entry: any) => {
+          const serviceId = entry.service_id ?? entry.serviceId ?? entry.service?.id;
+          const serviceName = entry.service?.service_name ?? entry.service?.serviceName ?? 'Service';
+          const price = entry.price == null ? '' : ` · ${entry.price}`;
+          const priceUnit = entry.price_unit ?? entry.priceUnit;
+          return { value: String(serviceId), label: `${serviceName}${price}${priceUnit ? ` / ${priceUnit}` : ''}` };
+        })}
+          value={serviceId ?? ''} onChange={setServiceId} error={errors.serviceId} clearable />
 
         <DateTimeField label="Starts" value={start} onChange={onStartChange} minimumDate={new Date()} error={errors.start} />
         <DateTimeField label="Ends" value={end} onChange={onEndChange} minimumDate={start} error={errors.end} />

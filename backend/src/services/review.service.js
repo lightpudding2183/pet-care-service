@@ -1,4 +1,4 @@
-const { Review, Booking, User, sequelize } = require('../index');
+const { Review, Booking, User, Provider, sequelize } = require('../index');
 const AppError = require('../utils/error');
 
 class ReviewService {
@@ -13,41 +13,67 @@ class ReviewService {
         throw new AppError('Rating must be between 1 and 5', 400);
       }
 
-      const booking = await Booking.findByPk(booking_id, {
-        include: [{ model: User, as: 'user'}]
+      return await sequelize.transaction(async (transaction) => {
+        const booking = await Booking.findByPk(booking_id, { transaction });
+        if (!booking) {
+          throw new AppError('Booking not found', 404);
+        }
+
+        if (booking.user_id !== user_id) {
+          throw new AppError('Not authorized to review', 403);
+        }
+
+        if (booking.status !== 'confirmed') {
+          throw new AppError('Can only review confirmed bookings', 400);
+        }
+
+        const provider = await Provider.findByPk(booking.provider_id, {
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+        if (!provider) {
+          throw new AppError('Provider not found', 404);
+        }
+
+        const review = await Review.create({
+          booking_id,
+          rating,
+          comment: comment || null,
+          reviewer_id: user_id,
+          reviewee_id: booking.provider_id
+        }, { transaction });
+
+        const [aggregate] = await Review.findAll({
+          where: { reviewee_id: booking.provider_id },
+          attributes: [
+            [sequelize.fn('AVG', sequelize.col('rating')), 'average'],
+            [sequelize.fn('COUNT', sequelize.col('id')), 'count']
+          ],
+          raw: true,
+          transaction
+        });
+        await provider.update({
+          rating_avg: Number(aggregate.average),
+          rating_count: Number(aggregate.count)
+        }, { transaction });
+
+        return review;
       });
-
-      if (!booking) {
-        throw new AppError('Booking not found', 400)
-      }
-
-      if (booking.user_id !== user_id) {
-        throw new AppError('Not authorized to review', 403);
-      }
-
-      if (booking.status !== 'confirmed') {
-        throw new AppError('Can only review confirmed bookings', 400);
-      }
-
-      const review = await Review.create({
-        booking_id,
-        rating,
-        comment: comment || null,
-        user_id
-      });
-      return review;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
       }
-      throw new AppError('Failed to create review', 500)
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        throw new AppError('This booking has already been reviewed', 409, { cause: error });
+      }
+      throw new AppError('Failed to create review', 500, { cause: error });
     }
   }
 
   async getReviewByProvider(providerId, filters = {}) {
     try {
       const { rating } = filters;
-      const where = { provider_id: providerId }
+      const where = { reviewee_id: providerId };
 
       if (rating) {
         where.rating = rating;
@@ -72,12 +98,12 @@ class ReviewService {
   async getAverageRating(providerId) {
     try {
       const result = await Review.findAll({
-        where: { provider_id: providerId },
+        where: { reviewee_id: providerId },
         attributes: [[sequelize.fn('AVG', sequelize.col('rating')), 'averageRating']]     
       })
 
       const average = result[0].getDataValue('averageRating') || 0;
-      const totalReview = await Review.count({ where: { provider_id: providerId } })
+      const totalReview = await Review.count({ where: { reviewee_id: providerId } });
 
       return { average, totalReview }
     } catch (error) {
@@ -92,7 +118,7 @@ class ReviewService {
     try {
       const review = await Review.findAll({
         where: { 
-          user_id: userId,
+          reviewer_id: userId,
           booking_id: bookingId
          },
       })

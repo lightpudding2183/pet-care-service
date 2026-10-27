@@ -2,8 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { User } = require('../index');
 const AppError = require('../utils/error');
-
-const JWT_SECRET = process.env.JWT_ACCESS_SECRET;
+const jwtConfig = require('../config/jwt');
 
 class AuthService {
   async register(userData) {
@@ -36,7 +35,9 @@ class AuthService {
       throw new AppError('Invalid email or password', 401);
     }
 
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, jwtConfig.secret, {
+      expiresIn: jwtConfig.expiresIn
+    });
     return { token };
   }
 

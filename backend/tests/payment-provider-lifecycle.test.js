@@ -1,14 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { Booking, Payment, Provider, ProviderServices, User, sequelize } = require('../src/index');
+const { Booking, Notification, Payment, Provider, ProviderServices, User, sequelize } = require('../src/index');
 const paymentService = require('../src/services/payment.service');
 const providerService = require('../src/services/provider.service');
 const stripeService = require('../src/services/stripe.service');
 const AppError = require('../src/utils/error');
 
 async function withMocks(mocks, run) {
-  const models = { Booking, Payment, Provider, ProviderServices, User };
+  const models = { Booking, Notification, Payment, Provider, ProviderServices, User };
   const originals = [];
   const transaction = { LOCK: { UPDATE: 'UPDATE' } };
 
@@ -138,6 +138,40 @@ test('payment status rejects users who do not own the associated booking', async
       (error) => error instanceof AppError && error.statusCode === 403
     );
   });
+});
+
+test('first successful payment notifies the customer and provider', async () => {
+  const payment = {
+    id: 'payment-1',
+    booking_id: 'booking-1',
+    status: 'pending',
+    save: async () => {}
+  };
+  const booking = {
+    id: 'booking-1',
+    user_id: 'customer-1',
+    provider_id: 'provider-1',
+    status: 'pending',
+    save: async () => {}
+  };
+  const recipients = [];
+
+  await withMocks({
+    Payment: { findByPk: async () => payment },
+    Booking: { findByPk: async () => booking },
+    Provider: { findByPk: async () => ({ user_id: 'provider-user-1' }) },
+    Notification: {
+      create: async (data) => {
+        recipients.push(data.user_id);
+        return data;
+      }
+    }
+  }, async () => {
+    await paymentService.updatePaymentStatus('payment-1', { status: 'paid' });
+  });
+
+  assert.deepEqual(recipients, ['customer-1', 'provider-user-1']);
+  assert.equal(booking.status, 'confirmed');
 });
 
 test('provider creation rejects a user who already has a provider profile', async () => {

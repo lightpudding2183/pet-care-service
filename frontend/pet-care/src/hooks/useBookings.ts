@@ -10,7 +10,7 @@ interface Booking {
   [key: string]: any;
 }
 
-// Loads the logged-in user's bookings: as owner via /users/:userId, as provider via /providers/:providerId
+// Loads the logged-in user's bookings through owner-scoped or provider-scoped endpoints.
 export default function useBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -25,7 +25,7 @@ export default function useBookings() {
 
       const list = user.role === 'provider'
         ? await getProviderBookingsRequest(user.providerId)
-        : await getUserBookingsRequest(user.id);
+        : await getUserBookingsRequest();
       setBookings(list);
       setError('');
     } catch (e) {

@@ -1,3 +1,5 @@
+const AppError = require('../utils/error');
+
 function validateBody(schema) {
   return (req, res, next) => {
     const { error, value } = schema.validate(req.body, {
@@ -6,10 +8,9 @@ function validateBody(schema) {
     });
 
     if (error) {
-      return res.status(422).json({
-        message: 'Validation failed.',
-        errors: error.details.map((d) => d.message),
-      });
+      const validationError = new AppError('Validation failed.', 422);
+      validationError.details = error.details.map((detail) => detail.message);
+      return next(validationError);
     }
 
     req.body = value;

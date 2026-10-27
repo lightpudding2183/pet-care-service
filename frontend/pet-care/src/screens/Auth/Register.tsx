@@ -37,7 +37,7 @@ export default function SignupScreen({ route }: SignupScreenProps) {
     setLoading(true);
     try {
       await register({
-        full_name: form.fullName.trim(),
+        name: form.fullName.trim(),
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim() || undefined,
         password: form.password,

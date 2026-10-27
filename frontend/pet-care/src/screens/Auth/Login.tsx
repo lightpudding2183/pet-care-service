@@ -6,7 +6,7 @@ import { colors } from '../../color';
 import { validateLogin } from '../../utils/validation';
 import useAuth from '../../hooks/useAuth';
 
-export default function LoginScreen({ navigation }: { navigation: { navigate: (screen: string) => void } }) {
+export default function LoginScreen({ navigation }: { navigation: { navigate: (screen: string, params?: { role: 'owner' | 'provider' }) => void } }) {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
@@ -49,7 +49,7 @@ export default function LoginScreen({ navigation }: { navigation: { navigate: (s
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>New to the app? </Text>
-          <Pressable onPress={() => navigation.navigate('RoleSelect')}>
+          <Pressable onPress={() => navigation.navigate('Signup', { role: 'owner' })}>
             <Text style={styles.link}>Create an account</Text>
           </Pressable>
         </View>

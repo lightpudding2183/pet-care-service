@@ -7,7 +7,6 @@ const ProviderServices = sequelize.define('ProviderServices', {
     defaultValue: DataTypes.UUIDV4,
     primaryKey: true
   },
-
   provider_id: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -16,7 +15,6 @@ const ProviderServices = sequelize.define('ProviderServices', {
       key: 'id'
     }
   },
-  
   service_id: {
     type: DataTypes.UUID,
     allowNull: false,
@@ -28,6 +26,11 @@ const ProviderServices = sequelize.define('ProviderServices', {
   price: {
     type: DataTypes.FLOAT,
     allowNull: false,
+  },
+  price_unit: {
+    type: DataTypes.ENUM('hour', 'visit', 'day'),
+    allowNull: false,
+    defaultValue: 'visit'
   },
 
   created_at: {

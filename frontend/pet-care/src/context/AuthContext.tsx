@@ -79,6 +79,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     dispatch({ type: 'AUTH_SUCCESS', user });
   }, []);
 
+  const authenticate = useCallback(async ({ email, password }: AuthCredentials): Promise<void> => {
+    const { token: accessToken } = await loginRequest({ email, password });
+    setAuthToken(accessToken);
+    try {
+      const user = await getProfileRequest();
+      await startSession({ user, accessToken });
+    } catch (error) {
+      setAuthToken(null);
+      throw error;
+    }
+  }, [startSession]);
+
   // Restore session on app launch
   useEffect(() => {
     (async (): Promise<void> => {
@@ -101,17 +113,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [clearSession]);
 
   const login = useCallback(async (credentials: AuthCredentials): Promise<void> => {
-    const { token } = await loginRequest(credentials);
-    const user = await getProfileRequest();
-    await startSession({ user, accessToken: token });
-  }, [startSession]);
+    await authenticate(credentials);
+  }, [authenticate]);
 
   const register = useCallback(async (payload: RegisterPayload): Promise<void> => {
     await registerRequest(payload);
-    const { token } = await loginRequest({ email: payload.email, password: payload.password });
-    const user = await getProfileRequest();
-    await startSession({ user, accessToken: token });
-  }, [startSession]);
+    await authenticate({ email: String(payload.email), password: String(payload.password) });
+  }, [authenticate]);
 
   const updateUser = useCallback((updates: Partial<User>): void => {
     dispatch({ type: 'UPDATE_USER', user: updates });

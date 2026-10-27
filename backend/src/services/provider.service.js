@@ -1,10 +1,16 @@
 const AppError = require('../utils/error');
-const { Provider, User, sequelize } = require('../index');
+const { Provider, ProviderServices, Services, User, sequelize } = require('../index');
 
 class ProviderService {
   async getProviderById(providerId) {
     try {
-      const provider = await Provider.findByPk(providerId);
+      const provider = await Provider.findByPk(providerId, {
+        include: [{
+          model: ProviderServices,
+          as: 'provider_services',
+          include: [{ model: Services, as: 'service' }]
+        }]
+      });
       if(!provider) {
         throw new AppError('Provider not found', 404);
       }
@@ -37,7 +43,11 @@ class ProviderService {
         }
 
         const provider = await Provider.create({
-          ...providerData,
+          business_name: providerData.business_name,
+          address: providerData.address,
+          verification_document_url: providerData.verification_document_url,
+          latitude: providerData.latitude,
+          longitude: providerData.longitude,
           user_id: userId
         }, { transaction });
 
@@ -70,7 +80,16 @@ class ProviderService {
         throw new AppError('Forbidden: you do not own this provider profile', 403);
       }
 
-      await provider.update(updateData);
+      const allowedUpdates = Object.fromEntries(
+        Object.entries(updateData).filter(([key]) => [
+          'business_name',
+          'address',
+          'verification_document_url',
+          'latitude',
+          'longitude'
+        ].includes(key))
+      );
+      await provider.update(allowedUpdates);
       return provider;
     } catch (error) {
       if (error instanceof AppError) {

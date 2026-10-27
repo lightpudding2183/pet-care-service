@@ -17,19 +17,20 @@ const toSnakeCase = (obj) => {
 };
 
 export const createBookingRequest = async (payload) => {
-  // Backend only accepts: provider_id, pet_id, start_time, end_time
-  // user_id is added by backend from auth
-  const backendPayload = toSnakeCase({
-    providerId: payload.providerId,
-    petId: payload.petId,
-    scheduledStart: payload.scheduledStart,
-    scheduledEnd: payload.scheduledEnd,
-  });
+  const backendPayload = {
+    provider_id: payload.providerId,
+    pet_id: payload.petId,
+    service_id: payload.serviceId,
+    start_time: payload.scheduledStart,
+    end_time: payload.scheduledEnd,
+  };
   return (await client.post(BASE, backendPayload)).data;
 };
 
-export const getUserBookingsRequest = async (userId) => toList((await client.get(`${BASE}/users/${userId}/bookings`)).data);
-export const getProviderBookingsRequest = async (providerId) => toList((await client.get(`${BASE}/providers/${providerId}/bookings`)).data);
+export const getUserBookingsRequest = async (filters = {}) =>
+  toList((await client.get(BASE, { params: { mine: '1', ...filters } })).data);
+export const getProviderBookingsRequest = async (providerId, filters = {}) =>
+  toList((await client.get(`${BASE}/providers/${providerId}/bookings`, { params: filters })).data);
 export const getBookingRequest = async (id) => (await client.get(`${BASE}/${id}`)).data;
 
 // Status changes (accept, start, complete, cancel) go through here: { status: 'confirmed' } etc.

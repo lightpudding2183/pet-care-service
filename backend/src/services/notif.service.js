@@ -1,9 +1,9 @@
 const { Op } = require('sequelize');
-const { Notification, User } = require('../index');
+const { Notification } = require('../index');
 const AppError = require('../utils/error');
 
 class NotifService {
-  async createNotif(notifData) {
+  async createNotif(notifData, { transaction } = {}) {
     try {
       const { user_id, type, payload_json } = notifData;
 
@@ -13,9 +13,11 @@ class NotifService {
       const notif = await Notification.create({
         user_id,
         type,
-        payload_json: payload_json || JSON.stringify({}),
+        payload_json: typeof payload_json === 'string'
+          ? payload_json
+          : JSON.stringify(payload_json || {}),
         read: false
-      });
+      }, { transaction });
 
       return notif;
     } catch (error) {
@@ -36,7 +38,7 @@ class NotifService {
       }
 
       if (read !== undefined) {
-        where.read = read !== false;
+        where.read = read === true || read === 'true';
       }
 
       const { count, rows: notifs } = await Notification.findAndCountAll({
@@ -68,9 +70,9 @@ class NotifService {
     }
   }
 
-  async markAsRead(notifId) {
+  async markAsRead(notifId, userId) {
     try {
-      const notif = await Notification.findByPk(notifId);
+      const notif = await Notification.findOne({ where: { id: notifId, user_id: userId } });
       if (!notif) {
         throw new AppError('Notification not found', 404);
       }
@@ -101,13 +103,14 @@ class NotifService {
     }
   }
 
-  async deleteNotif(notifId) {
+  async deleteNotif(notifId, userId) {
     try {
-      const notif = await Notification.findByPk(notifId);
+      const notif = await Notification.findOne({ where: { id: notifId, user_id: userId } });
       if (!notif) {
         throw new AppError('Notification not found', 404);
       }
       await notif.destroy();
+      return { message: 'Notification deleted successfully' };
     } catch (error) {
       if (error instanceof AppError) {
         throw error;

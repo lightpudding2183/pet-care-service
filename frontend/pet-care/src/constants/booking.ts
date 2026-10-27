@@ -5,6 +5,7 @@ export const serviceLabel = (key: string) =>
 export const STATUS = {
   pending: { label: 'Pending', bg: '#FFF4D6', fg: '#8A6100' },
   confirmed: { label: 'Confirmed', bg: '#DDF1E8', fg: '#1F4E42' },
+  in_progress: { label: 'In progress', bg: '#DCEAF2', fg: '#24516A' },
   completed: { label: 'Completed', bg: '#E9ECEB', fg: '#44514D' },
   cancelled: { label: 'Cancelled', bg: '#F8E0DD', fg: '#8E2A1F' },
 };
@@ -31,7 +32,7 @@ export const SEGMENTS = {
     },
     {
       key: 'upcoming', label: 'Upcoming', order: 'asc',
-      statuses: ['confirmed'],
+      statuses: ['confirmed', 'in_progress'],
       empty: { title: 'No upcoming jobs', message: 'Accepted bookings appear here.' },
     },
     {
@@ -56,15 +57,11 @@ export function getActions(role: string, status: string) {
   if (role === 'provider') {
     switch (status) {
       case 'pending':
-        return [
-          { label: 'Accept request', next: 'confirmed', variant: 'primary' },
-          {
-            label: 'Decline', next: 'cancelled', variant: 'outline',
-            confirm: { title: 'Decline this request?', message: 'The owner will see this booking as cancelled.', confirmText: 'Decline' },
-          },
-        ];
+        return [{ label: 'Accept request', next: 'confirmed', variant: 'primary' }];
       case 'confirmed':
-        return [{ label: 'Mark as completed', next: 'completed', variant: 'primary' }, CANCEL];
+        return [{ label: 'Start job', next: 'in_progress', variant: 'primary' }];
+      case 'in_progress':
+        return [{ label: 'Mark as completed', next: 'completed', variant: 'primary' }];
       default:
         return [];
     }

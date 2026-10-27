@@ -3,23 +3,17 @@ const Joi = require('joi');
 const createProviderSchema = Joi.object({
   business_name: Joi.string().trim().min(2).max(200).required(),
   address: Joi.string().trim().min(5).max(500).required(),
-  verified: Joi.boolean().optional(),
   verification_document_url: Joi.string().uri().allow('').optional(),
   latitude: Joi.number().min(-90).max(90).optional(),
-  longitude: Joi.number().min(-180).max(180).optional(),
-  rating_avg: Joi.number().min(0).max(5).optional(),
-  rating_count: Joi.number().integer().min(0).optional()
+  longitude: Joi.number().min(-180).max(180).optional()
 }).required();
 
 const updateProviderSchema = Joi.object({
   business_name: Joi.string().trim().min(2).max(200).optional(),
   address: Joi.string().trim().min(5).max(500).optional(),
-  verified: Joi.boolean().optional(),
   verification_document_url: Joi.string().uri().allow('').optional(),
   latitude: Joi.number().min(-90).max(90).optional(),
-  longitude: Joi.number().min(-180).max(180).optional(),
-  rating_avg: Joi.number().min(0).max(5).optional(),
-  rating_count: Joi.number().integer().min(0).optional()
+  longitude: Joi.number().min(-180).max(180).optional()
 }).min(1).required();
 
 const availabilitySchema = Joi.object({

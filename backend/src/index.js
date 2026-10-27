@@ -10,8 +10,8 @@ const Payment = require('./models/payment.model');
 const Review = require('./models/review.model');
 const Notification = require('./models/notif.model');
 
-User.hasMany(Pet, { foreignKey: 'owner_id', as: 'pets' });
-Pet.belongsTo(User, { foreignKey: 'owner_id', as: 'user' });
+User.hasMany(Pet, { foreignKey: 'owner_id', as: 'pets', constraints: false });
+Pet.belongsTo(User, { foreignKey: 'owner_id', as: 'user', constraints: false });
 
 User.hasOne(Provider, { foreignKey: 'user_id', as: 'provider' });
 Provider.belongsTo(User, { foreignKey: 'user_id', as: 'user' });
@@ -24,6 +24,8 @@ Booking.belongsTo(Provider, { foreignKey: 'provider_id', as: 'provider' });
 
 Pet.hasMany(Booking, { foreignKey: 'pet_id', as: 'bookings' });
 Booking.belongsTo(Pet, { foreignKey: 'pet_id', as: 'pet' });
+Services.hasMany(Booking, { foreignKey: 'service_id', as: 'bookings' });
+Booking.belongsTo(Services, { foreignKey: 'service_id', as: 'service' });
 
 Provider.hasMany(ProviderServices, { foreignKey: 'provider_id', as: 'provider_services' });
 ProviderServices.belongsTo(Provider, { foreignKey: 'provider_id', as: 'provider' });

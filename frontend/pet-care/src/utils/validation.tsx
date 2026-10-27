@@ -9,7 +9,7 @@ export function validateLogin({ email = '', password = '' }) {
 
 export function validateSignup({ fullName = '', email = '', phone = '', password = '', confirmPassword = '' }) {
   const errors: Record<string, string> = {};
-  if (fullName.trim().length < 2) errors.fullName = 'Enter your full name';
+  if (fullName.trim().length < 5) errors.fullName = 'Enter at least 5 characters';
   if (!EMAIL_RE.test(email.trim())) errors.email = 'Enter a valid email address';
   if (phone.trim() && !/^\+?[0-9\s-]{8,15}$/.test(phone.trim())) {
     errors.phone = 'Enter a valid phone number';
@@ -51,9 +51,10 @@ export function validateProvider({ businessName = '', address = '', latitude = '
   return errors;
 }
 
-export function validateBooking({ petId = '', start = '', end = '' }) {
+export function validateBooking({ petId = '', serviceId = '', start = '', end = '' }) {
   const errors:  Record<string, string> = {};
   if (!petId) errors.petId = 'Choose a pet';
+  if (!serviceId) errors.serviceId = 'Choose a service';
   if (new Date(start).getTime() <= Date.now()) errors.start = 'Start time must be in the future';
   if (end <= start) errors.end = 'End time must be after the start time';
   return errors;
