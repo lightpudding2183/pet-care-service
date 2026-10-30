@@ -4,24 +4,24 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('payment', {
-      payment_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       booking_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'booking',
-          key: 'booking_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       amount: {
-        type: Sequelize.FLOAT,
+        type: Sequelize.DECIMAL(10, 2),
         allowNull: false
       },
       status: {
@@ -39,21 +39,23 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 
     await queryInterface.addIndex('payment', ['booking_id'], {
-      name:'idx_payment_booking_id'
+      name: 'idx_payment_booking_id'
     });
   },
 
   async down (queryInterface, Sequelize) {
     await queryInterface.dropTable('payment');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_payment_status";');
+    await queryInterface.sequelize.query('DROP TYPE IF EXISTS "enum_payment_method";');
   }
 };

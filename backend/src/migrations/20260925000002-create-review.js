@@ -4,49 +4,46 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('review', {
-      review_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       booking_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
+        unique: true,
         references: {
           model: 'booking',
-          key: 'booking_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       reviewer_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'user',
-          key: 'user_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       reviewee_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'provider',
-          key: 'provider_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       rating: {
         type: Sequelize.FLOAT,
-        allowNull: false,
-        validate: {
-          min: 1,
-          max: 5
-        }
+        allowNull: false
       },
       comment: {
         type: Sequelize.STRING,
@@ -55,18 +52,30 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 
-    await queryInterface.addIndex('review', ['booking_id']);
-    await queryInterface.addIndex('review', ['reviewer_id']);
-    await queryInterface.addIndex('review', ['reviewee_id']);
+    await queryInterface.addIndex('review', ['booking_id'], {
+      name: 'idx_review_booking_id'
+    });
+    await queryInterface.addIndex('review', ['reviewer_id'], {
+      name: 'idx_review_reviewer_id'
+    });
+    await queryInterface.addIndex('review', ['reviewee_id'], {
+      name: 'idx_review_reviewee_id'
+    });
+
+    await queryInterface.addConstraint('review', {
+      fields: ['booking_id'],
+      type: 'unique',
+      name: 'review_booking_id_unique'
+    });
   },
 
   async down (queryInterface, Sequelize) {

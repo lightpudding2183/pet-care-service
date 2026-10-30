@@ -51,7 +51,7 @@ export default function BookingDetailScreen({ route, navigation }: { route: { pa
   };
 
   const onAction = (action: (typeof actions)[number]) => {
-    if (!action.confirm) return run(action);
+    if (!('confirm' in action) || !action.confirm) return run(action);
     Alert.alert(action.confirm.title, action.confirm.message, [
       { text: 'Back', style: 'cancel' },
       { text: action.confirm.confirmText, style: 'destructive', onPress: () => run(action) },

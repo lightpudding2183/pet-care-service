@@ -23,14 +23,28 @@ export const createBookingRequest = async (payload) => {
     service_id: payload.serviceId,
     start_time: payload.scheduledStart,
     end_time: payload.scheduledEnd,
+    notes: payload.notes,
+    payment_method: payload.paymentMethod,
   };
   return (await client.post(BASE, backendPayload)).data;
+};
+
+export const quoteBookingPriceRequest = async (payload) => {
+  const response = await client.post(`${BASE}/quote`, {
+    provider_id: payload.providerId,
+    service_id: payload.serviceId,
+    start_time: payload.scheduledStart,
+    end_time: payload.scheduledEnd,
+  });
+  return response.data;
 };
 
 export const getUserBookingsRequest = async (filters = {}) =>
   toList((await client.get(BASE, { params: { mine: '1', ...filters } })).data);
 export const getProviderBookingsRequest = async (providerId, filters = {}) =>
   toList((await client.get(`${BASE}/providers/${providerId}/bookings`, { params: filters })).data);
+export const getProviderBusySlotsRequest = async (providerId, from, to) =>
+  (await client.get(`${BASE}/providers/${providerId}/busy-slots`, { params: { from, to } })).data?.busySlots ?? [];
 export const getBookingRequest = async (id) => (await client.get(`${BASE}/${id}`)).data;
 
 // Status changes (accept, start, complete, cancel) go through here: { status: 'confirmed' } etc.

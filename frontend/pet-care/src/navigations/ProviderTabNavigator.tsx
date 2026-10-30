@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import AvailabilityScreen from '../screens/Providers/Availability';
+import AvailabilityScreen from '../screens/Availability/Availability';
 import BookingsStack from './BookingStack';
 import ProviderProfileStack from './ProviderProfileStack';
 import { colors } from '../color';

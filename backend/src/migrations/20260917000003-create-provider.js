@@ -4,63 +4,67 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('provider', {
-      provider_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       business_name: {
         type: Sequelize.STRING(256),
-        allowNull: false,
+        allowNull: false
       },
       address: {
         type: Sequelize.STRING(100),
-        allowNull: false,
+        allowNull: false
       },
       verified: {
-        type:Sequelize.BOOLEAN,
+        type: Sequelize.BOOLEAN,
         allowNull: false,
+        defaultValue: false
       },
       verification_document_url: {
         type: Sequelize.STRING(256),
-        allowNull: true,
+        allowNull: true
       },
       latitude: {
-        type:Sequelize.FLOAT,
-        allowNull: true,
+        type: Sequelize.FLOAT,
+        allowNull: true
       },
       longitude: {
-        type:Sequelize.FLOAT,
-        allowNull: true,
+        type: Sequelize.FLOAT,
+        allowNull: true
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
+        unique: true,
         references: {
           model: 'user',
-          key: 'user_id',
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       rating_avg: {
         type: Sequelize.FLOAT,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: null
       },
       rating_count: {
         type: Sequelize.INTEGER,
-        allowNull: false,
+        allowNull: true,
+        defaultValue: 0
       },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 
@@ -70,6 +74,12 @@ module.exports = {
 
     await queryInterface.addIndex('provider', ['latitude', 'longitude'], {
       name: 'idx_provider_location'
+    });
+
+    await queryInterface.addConstraint('provider', {
+      fields: ['user_id'],
+      type: 'unique',
+      name: 'provider_user_id_unique'
     });
   },
 

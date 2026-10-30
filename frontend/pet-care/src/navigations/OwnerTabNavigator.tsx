@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import ProfileScreen from '../screens/Profile/Profile';
 import BookingsStack from './BookingStack';
 import PetsStack from './PetStack';
+import ProviderBrowseStack from './ProviderBrowseStack';
 import { colors } from '../color';
 
 const Tab = createBottomTabNavigator();
@@ -12,6 +13,9 @@ const Tab = createBottomTabNavigator();
 export default function OwnerTabNavigator() {
   return (
     <Tab.Navigator screenOptions={{ headerShown: false, tabBarActiveTintColor: colors.primary }}>
+      <Tab.Screen name="BrowseTab" component={ProviderBrowseStack}
+        options={{ title: 'Browse', tabBarIcon: ({ color, size }) =>
+          <Ionicons name="search-outline" color={color} size={size} /> }} />
       <Tab.Screen name="PetsTab" component={PetsStack}
         options={{ title: 'My pets', tabBarIcon: ({ color, size }) => 
           <Ionicons name="paw-outline" color={color} size={size} /> }} />

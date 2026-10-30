@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { Availability, Provider, ProviderServices } = require('../src/index');
+const { Availability, Provider, ProviderServices, User } = require('../src/index');
 const providerRoutes = require('../src/routes/provider.routes');
 const searchService = require('../src/services/search.service');
 const AppError = require('../src/utils/error');
@@ -46,8 +46,14 @@ test('search returns paginated verified providers with requested service and ava
   assert.ok(query.where[Object.getOwnPropertySymbols(query.where)[0]][0].val.includes('<= 25'));
 
   const serviceJoin = query.include.find((include) => include.model === ProviderServices);
+  assert.deepEqual(serviceJoin.attributes, ['id', 'provider_id', 'service_id', 'price']);
   assert.equal(serviceJoin.required, true);
   assert.deepEqual(serviceJoin.where, { service_id: 'service-1' });
+  const userJoin = query.include.find((include) => include.model === User && include.as === 'user');
+  assert.deepEqual(userJoin.attributes, ['id', 'full_name', 'avatar_url']);
+  assert.equal(userJoin.model, User);
+  assert.equal(userJoin.as, 'user');
+  assert.doesNotThrow(() => Provider._validateIncludedElements({ model: Provider, include: [userJoin] }));
   const availabilityJoin = query.include.find((include) => include.model === Availability);
   assert.equal(availabilityJoin.required, true);
   assert.ok(availabilityJoin.where.start_time);

@@ -8,7 +8,12 @@ class ProviderService {
         include: [{
           model: ProviderServices,
           as: 'provider_services',
+          attributes: ['id', 'provider_id', 'service_id', 'price'],
           include: [{ model: Services, as: 'service' }]
+        }, {
+          model: User,
+          as: 'user',
+          attributes: ['id', 'full_name', 'avatar_url']
         }]
       });
       if(!provider) {

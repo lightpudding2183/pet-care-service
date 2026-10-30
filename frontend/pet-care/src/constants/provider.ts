@@ -17,3 +17,10 @@ export const SPECIES_OPTIONS = [
 ];
 
 export const speciesLabel = SPECIES_OPTIONS;
+
+export const SEARCH_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'rating', label: 'Rating' },
+  { key: 'service', label: 'Service Type' },
+  { key: 'species', label: 'Species' },
+];

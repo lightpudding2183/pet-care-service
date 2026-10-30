@@ -2,7 +2,7 @@ const availabilityService = require('../services/availability.service');
 const asyncHandler = require('../utils/asyncHandler');
 
 const getAvailability = asyncHandler(async (req, res) => {
-  const availability = await availabilityService.getAvailabilityByProviderId(req.params.id, req.user.id);
+  const availability = await availabilityService.getAvailabilityByProviderId(req.params.id);
   res.status(200).json(availability);
 });
 

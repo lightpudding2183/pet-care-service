@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const AppError = require('../utils/error');
-const { Availability, Provider, ProviderServices, Services, sequelize } = require('../index');
+const { Availability, Provider, ProviderServices, Services, User, sequelize } = require('../index');
 
 const EARTH_RADIUS_KM = 6371;
 
@@ -54,9 +54,14 @@ class SearchService {
       const include = [{
         model: ProviderServices,
         as: 'provider_services',
+        attributes: ['id', 'provider_id', 'service_id', 'price'],
         required: serviceId !== undefined && serviceId !== '',
         where: serviceId ? { service_id: serviceId } : undefined,
         include: [{ model: Services, as: 'service' }]
+      }, {
+        model: User,
+        as: 'user',
+        attributes: ['id', 'full_name', 'avatar_url']
       }];
       if (fromDate || toDate) {
         const availabilityWhere = {};

@@ -29,7 +29,7 @@ export function validatePet({ name = '', species= '', age= '' }) {
   if (!species) errors.species = 'Choose a species';
   if (age.trim() !== '') {
     const n = Number(age);
-    if (Number.isNaN(n) || n < 0 || n > 40) errors.age = 'Enter an age between 0 and 40';
+    if (!Number.isInteger(n) || n < 0 || n > 40) errors.age = 'Enter a whole age between 0 and 40';
   }
   return errors;
 }

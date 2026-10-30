@@ -56,7 +56,7 @@ export default function AddEditPetScreen({ route, navigation } : { route: { para
         <Input label="Name" value={form.name} onChangeText={set('name')} error={errors.name} autoCapitalize="words" />
         <ChipGroup label="Species" options={SPECIES} value={form.species} onChange={set('species')} error={errors.species} clearable />
         <Input label="Breed (optional)" value={form.breed} onChangeText={set('breed')} error={errors.breed} autoCapitalize="words" />
-        <Input label="Age (years)" value={form.age} onChangeText={set('age')} error={errors.age} keyboardType="decimal-pad" />
+        <Input label="Age (years)" value={form.age} onChangeText={set('age')} error={errors.age} keyboardType="number-pad" />
 
         {!!formError && <Text style={styles.formError}>{formError}</Text>}
         <Button title={editing ? 'Save changes' : 'Add pet'} onPress={onSubmit} loading={loading} />

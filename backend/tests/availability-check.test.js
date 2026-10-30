@@ -1,5 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const { Op } = require('sequelize');
 
 const { Booking, Provider, Pet, Availability, Notification, ProviderServices, sequelize } = require('../src/index');
 const bookingService = require('../src/services/booking.service');
@@ -31,11 +32,16 @@ async function withBookingMocks(mocks, run) {
   }
 
   const originalTransaction = sequelize.transaction;
+  const originalTableColumns = bookingService._tableColumns;
   sequelize.transaction = async (callback) => callback(transaction);
+  bookingService._tableColumns = async (tableName) => tableName === 'provider_services'
+    ? { price_unit: true }
+    : { service_id: true, price_snapshot: true };
   try {
     await run(transaction);
   } finally {
     sequelize.transaction = originalTransaction;
+    bookingService._tableColumns = originalTableColumns;
     for (const [model, method, original] of originals.reverse()) {
       model[method] = original;
     }
@@ -99,7 +105,7 @@ test('booking is created when no provider booking overlaps', async () => {
     assert.equal(providerLock, transaction.LOCK.UPDATE);
     assert.equal(createdData.status, undefined);
     assert.equal(createdData.service_id, 'service-123');
-    assert.equal(createdData.price_snapshot, '45.00');
+    assert.equal(createdData.price_snapshot, 45);
     assert.equal(notificationData.user_id, 'provider-owner');
     assert.equal(notificationData.type, 'booking.created');
     assert.equal(JSON.parse(notificationData.payload_json).booking_id, 'new-booking');
@@ -138,12 +144,34 @@ test('booking rejects a pet that does not belong to the requesting user', async 
 test('booking rejects a requested time outside provider availability', async () => {
   await withBookingMocks({
     ...validCreationMocks,
-    Availability: { findOne: async () => null }
+      Availability: { findOne: async () => null, findAll: async () => [] }
   }, async () => {
     await assert.rejects(
       () => bookingService.createBooking({ ...baseBooking }),
       (error) => error instanceof AppError && error.statusCode === 409
     );
+  });
+});
+
+test('booking accepts a future time inside a recurring weekly availability window', async () => {
+  const requestedStart = new Date();
+  requestedStart.setUTCDate(requestedStart.getUTCDate() + 3);
+  requestedStart.setUTCHours(10, 0, 0, 0);
+  const requestedEnd = new Date(requestedStart.getTime() + 60 * 60 * 1000);
+  const templateDate = new Date(Date.UTC(2026, 0, 1));
+  templateDate.setUTCDate(templateDate.getUTCDate() + ((requestedStart.getUTCDay() - templateDate.getUTCDay() + 7) % 7));
+  const templateStart = new Date(templateDate);
+  templateStart.setUTCHours(9, 0, 0, 0);
+  const templateEnd = new Date(templateDate);
+  templateEnd.setUTCHours(17, 0, 0, 0);
+
+  await withBookingMocks({
+    Availability: {
+      findOne: async () => null,
+      findAll: async () => [{ date: templateDate, start_time: templateStart, end_time: templateEnd }]
+    }
+  }, async () => {
+    await bookingService._assertAvailable('provider-123', requestedStart, requestedEnd);
   });
 });
 
@@ -295,6 +323,69 @@ test('booking lists filter and paginate results', async () => {
   assert.equal(query.where.status, 'confirmed');
   assert.equal(query.limit, 10);
   assert.equal(query.offset, 10);
+  assert.deepEqual(query.attributes, [
+    'id', 'user_id', 'provider_id', 'pet_id', 'status', 'start_time', 'end_time', 'created_at', 'updated_at'
+  ]);
+  assert.ok(!query.include.some((include) => include.as === 'service'));
+  const providerJoin = query.include.find((include) => include.as === 'provider');
+  const providerServicesJoin = providerJoin.include.find((include) => include.as === 'provider_services');
+  assert.deepEqual(providerServicesJoin.attributes, ['id', 'provider_id', 'service_id', 'price']);
+});
+
+test('provider busy-slot lookup returns only non-cancelled overlapping intervals', async () => {
+  let query;
+  const expected = [{ start_time: new Date('2026-11-02T10:00:00Z'), end_time: new Date('2026-11-02T11:00:00Z') }];
+  const originalFindAll = Booking.findAll;
+  Booking.findAll = async (options) => {
+    query = options;
+    return expected;
+  };
+
+  try {
+    const result = await bookingService.getProviderBusySlots(
+      'provider-1',
+      '2026-11-02T09:00:00Z',
+      '2026-11-02T12:00:00Z'
+    );
+    assert.deepEqual(result, expected);
+    assert.deepEqual(query.attributes, ['start_time', 'end_time']);
+    assert.equal(query.where.provider_id, 'provider-1');
+    assert.equal(query.where.status[Op.ne], 'cancelled');
+    assert.ok(query.where.start_time[Op.lt]);
+    assert.ok(query.where.end_time[Op.gt]);
+  } finally {
+    Booking.findAll = originalFindAll;
+  }
+});
+
+test('provider busy-slot lookup rejects invalid time ranges', async () => {
+  await assert.rejects(
+    () => bookingService.getProviderBusySlots('provider-1', 'invalid', '2026-11-02T12:00:00Z'),
+    (error) => error instanceof AppError && error.statusCode === 400
+  );
+});
+
+test('booking price quote calculates totals from the provider rate unit', async () => {
+  const originalProviderFindByPk = Provider.findByPk;
+  const originalProviderServiceFindOne = ProviderServices.findOne;
+  const originalTableColumns = bookingService._tableColumns;
+  Provider.findByPk = async () => ({ id: 'provider-1', verified: true });
+  ProviderServices.findOne = async () => ({ price: '12.50', price_unit: 'hour' });
+  bookingService._tableColumns = async () => ({ price_unit: true });
+
+  try {
+    const quote = await bookingService.quoteBookingPrice(
+      'provider-1',
+      'service-1',
+      '2026-11-02T09:00:00Z',
+      '2026-11-02T11:30:00Z'
+    );
+    assert.deepEqual(quote, { amount: 31.25, rate: 12.5, unit: 'hour', units: 2.5 });
+  } finally {
+    Provider.findByPk = originalProviderFindByPk;
+    ProviderServices.findOne = originalProviderServiceFindOne;
+    bookingService._tableColumns = originalTableColumns;
+  }
 });
 
 test('my bookings route is GET / and requires mine=1', async () => {

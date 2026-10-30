@@ -7,6 +7,7 @@ import { formatRange } from '../../utils/dateFormat';
 import { formatMoney } from '../../utils/money';
 import { bookingService, petName, providerName } from '../../utils/bookingDisplay';
 import usePayment from '../../hooks/usePayment';
+import { createPaymentRequest } from '../../api/payments.api';
 
 // Opened from a booking: navigate('Checkout', { booking })
 export default function CheckoutScreen({ route, navigation }: { route: { params: { booking: any } }; navigation: any }) {
@@ -19,6 +20,11 @@ export default function CheckoutScreen({ route, navigation }: { route: { params:
   const onPay = async () => {
     setError('');
     try {
+      if (booking.payment_method === 'cash' || booking.paymentMethod === 'cash') {
+        const payment = await createPaymentRequest({ bookingId: booking.id, method: 'cash' });
+        navigation.replace('PaymentDetail', { paymentId: payment.id, payment });
+        return;
+      }
       const result = await pay(booking.id);
       if (result.outcome === 'paid') {
         // Replace so Back returns to the booking, not to a finished checkout
@@ -60,7 +66,7 @@ export default function CheckoutScreen({ route, navigation }: { route: { params:
       )}
       {!!error && <Text style={styles.error}>{error}</Text>}
 
-      <Button title={`Pay ${amount ?? ''}`.trim()} onPress={onPay} loading={busy} />
+      <Button title={booking.payment_method === 'cash' || booking.paymentMethod === 'cash' ? 'Confirm cash payment' : `Pay ${amount ?? ''}`.trim()} onPress={onPay} loading={busy} />
     </ScrollView>
   );
 }

@@ -4,28 +4,28 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('notification', {
-      notif_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       user_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'user',
-          key: 'user_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       type: {
         type: Sequelize.STRING,
         allowNull: false
       },
       payload_json: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
         allowNull: false
       },
       read: {
@@ -35,16 +35,18 @@ module.exports = {
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 
-    await queryInterface.addIndex('notification', ['user_id']);
+    await queryInterface.addIndex('notification', ['user_id'], {
+      name: 'idx_notification_user_id'
+    });
   },
 
   async down (queryInterface, Sequelize) {

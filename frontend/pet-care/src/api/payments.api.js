@@ -7,7 +7,10 @@ const BASE = '/payments';
 const toList = (body) => (Array.isArray(body) ? body : body?.payments ?? []);
 
 // Send bookingId and method (required by backend). Backend accepts both camelCase and snake_case.
-export const createPaymentRequest = async ({ bookingId, method = 'stripe' }) => (await client.post(BASE, { bookingId, method })).data;
+export const createPaymentRequest = async ({ bookingId, method = 'stripe' }) => {
+  const result = (await client.post(BASE, { bookingId, method })).data;
+  return result?.payment ? { ...result.payment, clientSecret: result.clientSecret, paymentIntentId: result.paymentIntentId } : result;
+};
 
 export const getPaymentsRequest = async () => toList((await client.get(BASE)).data);
 export const getPaymentRequest = async (paymentId) => (await client.get(`${BASE}/${paymentId}`)).data;

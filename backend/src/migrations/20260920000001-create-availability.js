@@ -4,21 +4,21 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('availability', {
-      availability_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
-        allowNull: false
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       provider_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'provider',
-          key: 'provider_id'
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       date: {
         type: Sequelize.DATE,
@@ -36,6 +36,16 @@ module.exports = {
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },
+      created_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      },
+      updated_at: {
+        type: Sequelize.DATE,
+        allowNull: false,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+      }
     });
 
     await queryInterface.addIndex('availability', ['provider_id'], {

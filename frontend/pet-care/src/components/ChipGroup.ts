@@ -23,27 +23,22 @@ export default function ChipGroup({ label, options, value, onChange, error, clea
     { style: styles.wrapper },
     label ? React.createElement(Text, { style: styles.label }, label) : null,
     React.createElement(
-      View, 
-      { style: styles.row }),
+      View,
+      { style: styles.row },
       options.map((o) => {
         const selected = value === o.value;
-        return (
-          React.createElement(
-            Pressable, {
-              key: o.value,
-              accessibilityRole: "button",
-              accessibilityState: { selected: selected },
-              onPress: () => onChange(selected && clearable ? '' : o.value),
-              style: [styles.chip, selected && styles.chipSelected]
-            },
-            React.createElement(
-              Text, 
-              {style: [styles.chipText, selected && styles.chipTextSelected]},
-              o.label,
-            ),
-          )
+        return React.createElement(
+          Pressable, {
+            key: o.value,
+            accessibilityRole: "button",
+            accessibilityState: { selected: selected },
+            onPress: () => onChange(selected && clearable ? '' : o.value),
+            style: [styles.chip, selected && styles.chipSelected],
+          },
+          React.createElement(Text, { style: [styles.chipText, selected && styles.chipTextSelected] }, o.label)
         )
-      }),
+      })
+    ),
     error ? React.createElement(Text, { style: styles.error }, error) : null,
   )
 }

@@ -4,47 +4,47 @@
 module.exports = {
   async up (queryInterface, Sequelize) {
     await queryInterface.createTable('pet', {
-      pet_id: {
-        type: Sequelize.INTEGER,
+      id: {
+        type: Sequelize.UUID,
         primaryKey: true,
-        autoIncrement: true,
         allowNull: false,
+        defaultValue: Sequelize.UUIDV4
       },
       name: {
         type: Sequelize.STRING(100),
-        allowNull: false,
+        allowNull: false
       },
       species: {
         type: Sequelize.STRING(100),
-        allowNull: false,
+        allowNull: false
       },
       breed: {
         type: Sequelize.STRING(100),
-        allowNull: true,
+        allowNull: true
       },
       age: {
         type: Sequelize.INTEGER,
-        allowNull: true,
+        allowNull: true
       },
       owner_id: {
-        type: Sequelize.INTEGER,
+        type: Sequelize.UUID,
         allowNull: false,
         references: {
           model: 'user',
-          key: 'user_id',
+          key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
+        onDelete: 'CASCADE'
       },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updated_at: {
         type: Sequelize.DATE,
         allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
 

@@ -2,7 +2,8 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import useAuth from '../hooks/useAuth';
 import BookingDetailScreen from '@/screens/Bookings/BookingDetails';
-import BookingRequestScreen from '@/screens/Bookings/Request';
+import BookingRequestScreen from '@/screens/Bookings/BookingRequest';
+import BookingPetSelectionScreen from '@/screens/Bookings/BookingPetSelection';
 import BookingsScreen from '@/screens/Bookings/Bookings';
 import ProviderProfileScreen from '@/screens/Providers/ProviderProfile';
 import CheckoutScreen from '@/screens/Payments/Checkout';
@@ -13,7 +14,8 @@ type BookingStackParamList = {
   BookingsList: undefined;
   BookingDetail: { bookingId: string; booking?: any };
   ProviderProfile: undefined;
-  BookingRequest: { provider: any };
+  BookingRequest: { provider: any; serviceId?: string; availabilityWindowId?: string; selectedPetId?: string; selectedPetName?: string; stage?: number };
+  BookingPetSelection: { provider: any; serviceId: string; availabilityWindowId?: string };
   Checkout: { bookingId: string; booking: any };
   PaymentHistory: undefined;
   PaymentDetail: { paymentId: string; payment?: any };
@@ -32,6 +34,7 @@ export default function BookingsStack() {
       <Stack.Screen name="BookingDetail" component={BookingDetailScreen} options={{ title: 'Booking' }} />
       <Stack.Screen name="ProviderProfile" component={ProviderProfileScreen} options={{ title: 'Provider' }} />
       <Stack.Screen name="BookingRequest" component={BookingRequestScreen} options={{ title: 'Book a service' }} />
+      <Stack.Screen name="BookingPetSelection" component={BookingPetSelectionScreen} options={{ title: 'Choose a pet' }} />
       <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Pay for booking' }} />
       <Stack.Screen name="PaymentHistory" component={PaymentHistoryScreen} options={{ title: 'Payments' }} />
       <Stack.Screen name="PaymentDetail" component={PaymentDetailScreen} options={{ title: 'Payment' }} />
